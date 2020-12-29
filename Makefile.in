@@ -1,0 +1,36 @@
+all: libclocksync.so clocksync clocktest clocktest_pthread
+
+CFLAGS=@CFLAGS@ -Wall -pedantic -std=gnu99
+ROOT=$(DESTDIR)
+prefix=@prefix@
+bindir=$(prefix)/bin
+libdir=$(prefix)/lib
+includedir=$(prefix)/include
+
+clean:
+	rm -f *.o clocksync *.so clocktest clocktest_pthread
+
+clocksync: clocksync.o libclocksync.so
+	gcc -o $@ $+ -lpthread
+
+clocksync.o: clocksync.c
+	gcc $(CFLAGS) -c -o $@ $+
+
+clocktest: clocktest.c libclocksync.so
+	gcc $(CFLAGS) -o $@ $+ libclocksync.so -lpthread
+
+clocktest_pthread: clocktest_pthread.c libclocksync.so
+	gcc -o $@ $+ libclocksync.so -lpthread
+
+install:
+	mkdir -p $(ROOT)$(bindir) $(ROOT)$(libdir) $(ROOT)$(includedir)
+	cp -v clocksync $(ROOT)$(bindir)
+	cp -v libclocksync.so $(ROOT)$(libdir)
+	cp -v libclocksync.h $(ROOT)$(includedir)
+
+libclocksync.so: libclocksync.o
+	gcc -o $@ -shared -Wl,-soname,libclocksync.so $+
+
+libclocksync.o: libclocksync.c
+	gcc $(CFLAGS) -fPIC -c -o $@ $+
+
